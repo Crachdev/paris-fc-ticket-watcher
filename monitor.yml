@@ -1,0 +1,38 @@
+name: Paris FC ticket check
+
+on:
+  workflow_dispatch:
+  schedule:
+    # 09:00 Paris time is 08:00 UTC during winter and 07:00 UTC during summer.
+    # Run at 08:00 UTC; adjust for daylight saving if desired.
+    - cron: "0 8 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run diagnostic check
+        run: python main.py
+
+      - name: Save diagnostic report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: paris-fc-diagnostic
+          path: diagnostic.json
+          if-no-files-found: ignore
+          retention-days: 14
